@@ -9,6 +9,7 @@ CONFIG += c++17 cmdline
 SOURCES += \
         calculationtools.cpp \
         error.cpp \
+        expressiontree.cpp \
         main.cpp
 
 # Default rules for deployment.
@@ -18,4 +19,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     calculationtools.h \
-    error.h
+    error.h \
+    expressiontree.h
