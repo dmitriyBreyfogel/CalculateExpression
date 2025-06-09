@@ -1,3 +1,6 @@
 #include "calculationtools.h"
 
-CalculationTools::CalculationTools() {}
+QList<Token> tokenize(const QString& expression, QSet<Error>& errors) {
+    QList<Token> tokens = {};
+    return tokens;
+}

@@ -1,4 +1,4 @@
-QT = core
+QT = core testlib
 
 CONFIG += c++17 cmdline
 
@@ -10,7 +10,9 @@ SOURCES += \
         calculationtools.cpp \
         error.cpp \
         expressiontree.cpp \
-        main.cpp
+        main.cpp \
+        test_build.cpp \
+        test_tokenize.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -20,4 +22,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     calculationtools.h \
     error.h \
-    expressiontree.h
+    expressiontree.h \
+    test_build.h \
+    test_tokenize.h
