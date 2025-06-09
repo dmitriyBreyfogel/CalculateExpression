@@ -12,6 +12,7 @@ SOURCES += \
         expressiontree.cpp \
         main.cpp \
         test_build.cpp \
+        test_calculate.cpp \
         test_tokenize.cpp
 
 # Default rules for deployment.
@@ -24,4 +25,5 @@ HEADERS += \
     error.h \
     expressiontree.h \
     test_build.h \
+    test_calculate.h \
     test_tokenize.h
