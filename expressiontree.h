@@ -26,10 +26,14 @@ public:
 
     static const QMap<QString, int> operatorsPrecedence;
 
+    ExpressionTree* getLeft() const;
+    ExpressionTree* getRight() const;
     int getStart() const;
     int getEnd() const;
     double getValue() const;
     NodeType getNodeType() const;
+
+    QString toString() const;
 
     static int countOperands(NodeType type);
     static ExpressionTree* build(const QList<Token>& tokens, QSet<Error>& errors);

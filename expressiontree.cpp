@@ -32,6 +32,14 @@ ExpressionTree::NodeType ExpressionTree::determineNodeType(const QString& value)
     return NodeType::Operand;
 }
 
+ExpressionTree* ExpressionTree::getLeft() const {
+    return left;
+}
+
+ExpressionTree* ExpressionTree::getRight() const {
+    return right;
+}
+
 int ExpressionTree::getStart() const {
     return start;
 }
@@ -46,6 +54,10 @@ double ExpressionTree::getValue() const {
 
 ExpressionTree::NodeType ExpressionTree::getNodeType() const {
     return nodeType;
+}
+
+QString ExpressionTree::toString() const {
+    return "";
 }
 
 ExpressionTree* ExpressionTree::build(const QList<Token>& tokens, QSet<Error>& errors) {
