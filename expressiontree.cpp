@@ -1,7 +1,14 @@
 #include "expressiontree.h"
 
 ExpressionTree::ExpressionTree(const QString& operation, ExpressionTree* left, ExpressionTree* right, int start, int end) {
-
+    this->nodeType = determineNodeType(operation);
+    if (nodeType == NodeType::Operand) {
+        this->value = operation.toDouble();
+    }
+    this->left = left;
+    this->right = right;
+    this->start = start;
+    this->end = end;
 }
 
 ExpressionTree::~ExpressionTree() {
@@ -29,6 +36,12 @@ bool ExpressionTree::isValidNumber(double number) const {
 }
 
 ExpressionTree::NodeType ExpressionTree::determineNodeType(const QString& value) {
+    if (value == "+") return NodeType::Plus;
+    if (value == "-") return NodeType::BinaryMinus;
+    if (value == "-u") return NodeType::UnaryMinus;
+    if (value == "/") return NodeType::Division;
+    if (value == "*") return NodeType::Multiplication;
+    if (value == "^") return NodeType::Power;
     return NodeType::Operand;
 }
 

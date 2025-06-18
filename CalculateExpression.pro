@@ -13,6 +13,8 @@ SOURCES += \
         main.cpp \
         test_build.cpp \
         test_calculate.cpp \
+        test_determinenodetype.cpp \
+        test_processoperatorfromstack.cpp \
         test_tokenize.cpp
 
 # Default rules for deployment.
@@ -26,4 +28,6 @@ HEADERS += \
     expressiontree.h \
     test_build.h \
     test_calculate.h \
+    test_determinenodetype.h \
+    test_processoperatorfromstack.h \
     test_tokenize.h

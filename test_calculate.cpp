@@ -41,13 +41,13 @@ void Test_Calculate::testCalculate_data() {
     ExpressionTree* node_1 = new ExpressionTree("1", nullptr, nullptr, 0, 0);
     double result_1 = 1;
 
-    QTest::newRow("") << node_1 << result_1 << emptyErrors;
+    QTest::newRow("1. Single number (integer)") << node_1 << result_1 << emptyErrors;
 
     // Тест 2
     ExpressionTree* node_2 = new ExpressionTree("1.234", nullptr, nullptr, 0, 4);
     double result_2 = 1.234;
 
-    QTest::newRow("") << node_2 << result_2 << emptyErrors;
+    QTest::newRow("2. Single number (float)") << node_2 << result_2 << emptyErrors;
 
     // Тест 3
     ExpressionTree* node_3_1 = new ExpressionTree("1", nullptr, nullptr, 0, 0);
@@ -56,7 +56,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_3 = 1 + 4;
 
-    QTest::newRow("") << node_3 << result_3 << emptyErrors;
+    QTest::newRow("3. Simple addition (integers)") << node_3 << result_3 << emptyErrors;
 
     // Тест 4
     ExpressionTree* node_4_1 = new ExpressionTree("1.234", nullptr, nullptr, 0, 4);
@@ -65,7 +65,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_4 = 1.234 + 5.678;
 
-    QTest::newRow("") << node_4 << result_4 << emptyErrors;
+    QTest::newRow("4. Simple addition (floats)") << node_4 << result_4 << emptyErrors;
 
     // Тест 5
     ExpressionTree* node_5_1 = new ExpressionTree("1", nullptr, nullptr, 0, 0);
@@ -74,7 +74,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_5 = 1 - 4;
 
-    QTest::newRow("") << node_5 << result_5 << emptyErrors;
+    QTest::newRow("5. Simple subtraction (integers)") << node_5 << result_5 << emptyErrors;
 
     // Тест 6
     ExpressionTree* node_6_1 = new ExpressionTree("1.234", nullptr, nullptr, 0, 4);
@@ -83,16 +83,16 @@ void Test_Calculate::testCalculate_data() {
 
     double result_6 = 1.234 - 5.678;
 
-    QTest::newRow("") << node_6 << result_6 << emptyErrors;
+    QTest::newRow("6. Simple subtraction (floats)") << node_6 << result_6 << emptyErrors;
 
     // Тест 7
     ExpressionTree* node_7_1 = new ExpressionTree("1", nullptr, nullptr, 0, 0);
     ExpressionTree* node_7_2 = new ExpressionTree("4", nullptr, nullptr, 2, 2);
     ExpressionTree* node_7 = new ExpressionTree("/", node_7_1, node_7_2, 0, 2);
 
-    double result_7 = 1 / 4;
+    double result_7 = 1.0 / 4.0;
 
-    QTest::newRow("") << node_7 << result_7 << emptyErrors;
+    QTest::newRow("7. Simple division (integers)") << node_7 << result_7 << emptyErrors;
 
     // Тест 8
     ExpressionTree* node_8_1 = new ExpressionTree("1.234", nullptr, nullptr, 0, 4);
@@ -101,7 +101,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_8 = 1.234 / 5.678;
 
-    QTest::newRow("") << node_8 << result_8 << emptyErrors;
+    QTest::newRow("8. Simple division (floats)") << node_8 << result_8 << emptyErrors;
 
     // Тест 9
     ExpressionTree* node_9_1 = new ExpressionTree("2", nullptr, nullptr, 0, 0);
@@ -110,7 +110,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_9 = 2 * 4;
 
-    QTest::newRow("") << node_9 << result_9 << emptyErrors;
+    QTest::newRow("9. Simple multiplication (integers)") << node_9 << result_9 << emptyErrors;
 
     // Тест 10
     ExpressionTree* node_10_1 = new ExpressionTree("1.234", nullptr, nullptr, 0, 4);
@@ -119,7 +119,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_10 = 1.234 * 5.678;
 
-    QTest::newRow("") << node_10 << result_10 << emptyErrors;
+    QTest::newRow("10. Simple multiplication (floats)") << node_10 << result_10 << emptyErrors;
 
     // Тест 11
     ExpressionTree* node_11_1 = new ExpressionTree("2", nullptr, nullptr, 0, 0);
@@ -128,7 +128,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_11 = 16;
 
-    QTest::newRow("") << node_11 << result_11 << emptyErrors;
+    QTest::newRow("11. Simple exponentiation (integer base and exponent)") << node_11 << result_11 << emptyErrors;
 
     // Тест 12
     ExpressionTree* node_12_1 = new ExpressionTree("1.234", nullptr, nullptr, 0, 4);
@@ -137,7 +137,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_12 = 3.29979893;
 
-    QTest::newRow("") << node_12 << result_12 << emptyErrors;
+    QTest::newRow("12. Simple exponentiation (float base and exponent)") << node_12 << result_12 << emptyErrors;
 
     // Тест 13
     ExpressionTree* node_13_1 = new ExpressionTree("4", nullptr, nullptr, 0, 0);
@@ -146,7 +146,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_13 = 2;
 
-    QTest::newRow("") << node_13 << result_13 << emptyErrors;
+    QTest::newRow("13. Square root (exponent 0.5)") << node_13 << result_13 << emptyErrors;
 
     // Тест 14
     ExpressionTree* node_14_1_1 = new ExpressionTree("2", nullptr, nullptr, 1, 1);
@@ -158,7 +158,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_14 = -1.25992104989;
 
-    QTest::newRow("") << node_14 << result_14 << emptyErrors;
+    QTest::newRow("14. Complex expression with unary minus and exponentiation") << node_14 << result_14 << emptyErrors;
 
     // Тест 15
     ExpressionTree* node_15_1_1 = new ExpressionTree("1", nullptr, nullptr, 0, 0);
@@ -175,7 +175,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_15 = 2.999232;
 
-    QTest::newRow("") << node_15 << result_15 << emptyErrors;
+    QTest::newRow("15. Complex nested operations") << node_15 << result_15 << emptyErrors;
 
     // Тест 16
     ExpressionTree* node_16_1_1 = new ExpressionTree("1", nullptr, nullptr, 1, 1);
@@ -189,7 +189,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_16 = 485;
 
-    QTest::newRow("") << node_16 << result_16 << emptyErrors;
+    QTest::newRow("16. Unary minus with exponentiation") << node_16 << result_16 << emptyErrors;
 
     // Тест 17
     ExpressionTree* node_17_1_1_1 = new ExpressionTree("1", nullptr, nullptr, 2, 2);
@@ -201,7 +201,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_17 = -36;
 
-    QTest::newRow("") << node_17 << result_17 << emptyErrors;
+    QTest::newRow("17. Nested unary minus with exponentiation") << node_17 << result_17 << emptyErrors;
 
     // Тест 18
     ExpressionTree* node_18_1_1_1 = new ExpressionTree("1", nullptr, nullptr, 3, 3);
@@ -213,7 +213,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_18 = 36;
 
-    QTest::newRow("") << node_18 << result_18 << emptyErrors;
+    QTest::newRow("18. Unary minus in base of exponentiation") << node_18 << result_18 << emptyErrors;
 
     // Тест 19
     ExpressionTree* node_19_1_1_1_1 = new ExpressionTree("1", nullptr, nullptr, 4, 4);
@@ -225,7 +225,7 @@ void Test_Calculate::testCalculate_data() {
 
     double result_19 = 36;
 
-    QTest::newRow("") << node_19 << result_19 << emptyErrors;
+    QTest::newRow("19. Multiple unary minuses") << node_19 << result_19 << emptyErrors;
 
     // Тест 20
     ExpressionTree* node_20_1_1 = new ExpressionTree("2", nullptr, nullptr, 0, 0);
@@ -242,7 +242,7 @@ void Test_Calculate::testCalculate_data() {
 
     QSet<Error> errors_20 = { error_20 };
 
-    QTest::newRow("") << node_20 << result_20 << errors_20;
+    QTest::newRow("20. Division by zero (simple case)") << node_20 << result_20 << errors_20;
 
     // Тест 21
     ExpressionTree* node_21_1_1 = new ExpressionTree("1", nullptr, nullptr, 1, 1);
@@ -294,7 +294,7 @@ void Test_Calculate::testCalculate_data() {
     error_23.setExpression("(2+3)/(4-5+1)");
 
     QSet<Error> errors_23 = { error_23 };
-    QTest::newRow("023. Division by zero with complex denominator") << node_23 << 0.0 << errors_23;
+    QTest::newRow("23. Division by zero with complex denominator") << node_23 << 0.0 << errors_23;
 
     // Тест 24
     ExpressionTree* node_24_1_1 = new ExpressionTree("1", nullptr, nullptr, 1, 1);
@@ -329,7 +329,7 @@ void Test_Calculate::testCalculate_data() {
     error_25.setExpression("(-2)^0.5");
 
     QSet<Error> errors_5 = { error_25 };
-    QTest::newRow("25. Root of negative number (decimal exponent)") << node_5 << 0.0 << errors_5;
+    QTest::newRow("25. Root of negative number (decimal exponent)") << node_25 << 0.0 << errors_5;
 
     // Тест 26
     ExpressionTree* node_26_1_1 = new ExpressionTree("2", nullptr, nullptr, 2, 2);

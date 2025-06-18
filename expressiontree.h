@@ -40,6 +40,9 @@ public:
     double calculate(QSet<Error>& errors) const;
 
 private:
+    friend class Test_ProcessOperatorFromStack;
+    friend class Test_DetermineNodeType;
+
     ExpressionTree* left;
     ExpressionTree* right;
     NodeType nodeType;
