@@ -2,9 +2,14 @@
 
 ExpressionTree::ExpressionTree(const QString& operation, ExpressionTree* left, ExpressionTree* right, int start, int end) {
     this->nodeType = determineNodeType(operation);
+
     if (nodeType == NodeType::Operand) {
-        this->value = operation.toDouble();
+        bool validDouble;
+        double value = operation.toDouble(&validDouble);
+        if (validDouble && isValidNumber(value))
+            this->value = value;
     }
+
     this->left = left;
     this->right = right;
     this->start = start;
@@ -16,7 +21,7 @@ ExpressionTree::~ExpressionTree() {
     delete right;
 }
 
-const QMap<QString, int> operatorsPrecedence = {
+const QMap<QString, int> ExpressionTree::operatorsPrecedence = {
     {"+", 1},
     {"-", 1},
     {"*", 2},
@@ -32,7 +37,8 @@ bool ExpressionTree::processOperatorFromStack(QStack<Token>& operators, QStack<E
 }
 
 bool ExpressionTree::isValidNumber(double number) const {
-    return false;
+    if (number < -1.7E308 && number > 1.7E308)
+    return true;
 }
 
 ExpressionTree::NodeType ExpressionTree::determineNodeType(const QString& value) {
@@ -70,7 +76,13 @@ ExpressionTree::NodeType ExpressionTree::getNodeType() const {
 }
 
 QString ExpressionTree::toString() const {
-    return "";
+    if (nodeType == NodeType::Plus) return "+";
+    if (nodeType == NodeType::BinaryMinus) return "-";
+    if (nodeType == NodeType::UnaryMinus) return "-u";
+    if (nodeType == NodeType::Division) return "/";
+    if (nodeType == NodeType::Multiplication) return "*";
+    if (nodeType == NodeType::Power) return "^";
+    return QString::number(value);
 }
 
 ExpressionTree* ExpressionTree::build(const QList<Token>& tokens, QSet<Error>& errors) {
@@ -82,5 +94,13 @@ double ExpressionTree::calculate(QSet<Error>& errors) const {
 }
 
 int ExpressionTree::countOperands(NodeType type) {
-    return -1;
+    switch(type) {
+        case NodeType::Plus:
+        case NodeType::BinaryMinus:
+        case NodeType::Multiplication:
+        case NodeType::Division:
+        case NodeType::Power: return 2;
+        case NodeType::UnaryMinus: return 1;
+        default: return 0;
+    }
 }

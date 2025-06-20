@@ -6,9 +6,17 @@ void Test_Tokenize::testTokenize() {
     QFETCH(QList<Token>, tokens);
     QFETCH(QSet<Error>, errors);
 
-    // Вызываем тестируемую функцию
     QSet<Error> actualErrors;
-    QList<Token> actualTokens = tokenize(inputString, actualErrors);
+    QList<Token> actualTokens;
+
+    try {
+        // Вызываем тестируемую функцию (может выбросить исключение)
+        actualTokens = tokenize(inputString, actualErrors);
+    }
+    catch (const QSet<Error>& thrownErrors) {
+        // Если было исключение - используем ошибки из него
+        actualErrors = thrownErrors;
+    }
 
     // Сравниваем токены
     QStringList tokenDifferences = compareTokenLists(actualTokens, tokens);
@@ -16,9 +24,9 @@ void Test_Tokenize::testTokenize() {
              qPrintable(QString("Token mismatch:\n%1")
                             .arg(tokenDifferences.join("\n"))));
 
-    // Сравниваем ошибки
-    QString differences = compareErrors(errors, actualErrors);
-    QVERIFY2(differences.isEmpty(), qPrintable(differences));
+    // Сравниваем ошибки (из исключения или переданные через параметр)
+    QString errorDifferences = compareErrors(errors, actualErrors);
+    QVERIFY2(errorDifferences.isEmpty(), qPrintable(errorDifferences));
 }
 
 void Test_Tokenize::testTokenize_data() {
@@ -49,11 +57,13 @@ void Test_Tokenize::testTokenize_data() {
     QList<Token> tokens_2 = {};
     tokens_2.append(Token("1", 0, 0));
     tokens_2.append(Token(" ", 1, 1));
-    tokens_2.append(Token("2", 2, 2));
+    tokens_2.append(Token("+", 2, 2));
     tokens_2.append(Token(" ", 3, 3));
-    tokens_2.append(Token("-", 4, 4));
+    tokens_2.append(Token("2", 4, 4));
     tokens_2.append(Token(" ", 5, 5));
-    tokens_2.append(Token("3", 6, 6));
+    tokens_2.append(Token("-", 6, 6));
+    tokens_2.append(Token(" ", 7, 7));
+    tokens_2.append(Token("3", 8, 8));
 
     QTest::newRow("02. Expression with spaces, without parentheses or unary minuses (integers)") << input_2 << tokens_2 << emptyErrors;
 
@@ -89,7 +99,7 @@ void Test_Tokenize::testTokenize_data() {
 
     // Тест 5
     // Охват всех типов операций
-    QString input_5 = "1 – 2 + 3 * 4 / 2 ^ 3";
+    QString input_5 = "1 - 2 + 3 * 4 / 2 ^ 3";
 
     QList<Token> tokens_5 = {};
     tokens_5.append(Token("1", 0, 0));
@@ -164,8 +174,8 @@ void Test_Tokenize::testTokenize_data() {
     QList<Token> tokens_9 = {};
     tokens_9.append(Token("+", 0, 0));
     tokens_9.append(Token("+", 1, 1));
-    tokens_9.append(Token("-", 2, 2));
-    tokens_9.append(Token("-", 3, 3));
+    tokens_9.append(Token("-u", 2, 2));
+    tokens_9.append(Token("-u", 3, 3));
     tokens_9.append(Token("/", 4, 4));
     tokens_9.append(Token("/", 5, 5));
     tokens_9.append(Token("^", 6, 6));
@@ -295,7 +305,7 @@ void Test_Tokenize::testTokenize_data() {
 
     // Тест 20
     // Имеется неизвестная последовательность символов
-    QString input_20 = "abc + 3.14 – 3.15";
+    QString input_20 = "abc + 3.14 - 3.15";
 
     Error error_20;
     error_20.setType(Error::Type::unknownSymbolsSequence);
@@ -308,7 +318,7 @@ void Test_Tokenize::testTokenize_data() {
 
     // Тест 21
     // Имеется несколько неизвестных последовательностей символов
-    QString input_21 = "abc + 3.14 – def";
+    QString input_21 = "abc + 3.14 - def";
 
     Error error_21_1;
     error_21_1.setType(Error::Type::unknownSymbolsSequence);
@@ -401,7 +411,7 @@ void Test_Tokenize::testTokenize_data() {
 
     // Тест 27
     // Неизвестная последовательность символов включает в себя символ поддерживаемой операции
-    QString input_27 = "ab+c – 3.14";
+    QString input_27 = "ab+c - 3.14";
 
     Error error_27_1;
     error_27_1.setType(Error::Type::unknownSymbolsSequence);
@@ -419,7 +429,7 @@ void Test_Tokenize::testTokenize_data() {
 
     // Тест 28
     // Поддерживаемый символ операции перед неизвестной последовательностью символов
-    QString input_28 = "-abc – 3.14";
+    QString input_28 = "-abc - 3.14";
 
     Error error_28;
     error_28.setType(Error::Type::unknownSymbolsSequence);
@@ -432,7 +442,7 @@ void Test_Tokenize::testTokenize_data() {
 
     // Тест 29
     // Поддерживаемый символ операции после неизвестной последовательности символов
-    QString input_29 = "abc- – 3.14";
+    QString input_29 = "abc- - 3.14";
 
     Error error_29;
     error_29.setType(Error::Type::unknownSymbolsSequence);

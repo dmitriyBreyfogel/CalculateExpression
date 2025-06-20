@@ -62,8 +62,28 @@ QString Error::message() const {
 }
 
 bool Error::operator==(const Error& other) const {
-    return type == other.type && symbolsSequence == other.symbolsSequence &&
-            expression == other.expression && leftOperand == other.leftOperand &&
-            rightOperand == other.rightOperand && indexSymbol == other.indexSymbol &&
-           operation == other.operation;
+    if (type != other.type) return false;
+
+    switch (type) {
+    case Type::unknownSymbolsSequence:
+        return symbolsSequence == other.symbolsSequence;
+    case Type::divisionByZero:
+    case Type::incorrectRoot:
+        return expression == other.expression;
+    case Type::noLeftOperand:
+    case Type::noRightOperand:
+    case Type::noBothOperands:
+        return operation == other.operation && indexSymbol == other.indexSymbol;
+    case Type::noClosingParenthesis:
+    case Type::noOpeningParenthesis:
+        return indexSymbol == other.indexSymbol;
+    case Type::noCalcOperation:
+        return leftOperand == other.leftOperand && rightOperand == other.rightOperand;
+    case Type::inputFileWay:
+    case Type::outputFileWay:
+    case Type::countStrings:
+    case Type::operandOutOfRange:
+    default:
+        return true; // Для этих типов достаточно совпадения type
+    }
 }

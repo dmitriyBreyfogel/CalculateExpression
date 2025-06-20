@@ -5,8 +5,9 @@
 #include <QMap>
 #include <QList>
 #include <QStack>
-#include "calculationtools.h"
 #include "error.h"
+
+struct Token;
 
 class ExpressionTree
 {

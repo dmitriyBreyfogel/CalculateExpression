@@ -34,6 +34,39 @@ public:
     QString message() const;
     bool operator==(const Error& other) const;
 
+    friend uint qHash(const Error& error, uint seed = 0) {
+        uint hash = qHash(error.type, seed);
+        switch (error.type) {
+        case Error::Type::unknownSymbolsSequence:
+            hash ^= qHash(error.symbolsSequence, seed);
+            break;
+        case Error::Type::divisionByZero:
+        case Error::Type::incorrectRoot:
+            hash ^= qHash(error.expression, seed);
+            break;
+        case Error::Type::noLeftOperand:
+        case Error::Type::noRightOperand:
+        case Error::Type::noBothOperands:
+            hash ^= qHash(error.operation, seed) ^ qHash(error.indexSymbol, seed);
+            break;
+        case Error::Type::noClosingParenthesis:
+        case Error::Type::noOpeningParenthesis:
+            hash ^= qHash(error.indexSymbol, seed);
+            break;
+        case Error::Type::noCalcOperation:
+            hash ^= qHash(error.leftOperand, seed) ^ qHash(error.rightOperand, seed);
+            break;
+        case Error::Type::inputFileWay:
+        case Error::Type::outputFileWay:
+        case Error::Type::countStrings:
+        case Error::Type::operandOutOfRange:
+        default:
+            // Для этих типов достаточно type
+            break;
+        }
+        return hash;
+    }
+
 private:
     Type type;
     QString symbolsSequence;
@@ -43,10 +76,5 @@ private:
     int indexSymbol;
     QString operation;
 };
-
-// Функция хеширования для QSet
-inline uint qHash(const Error &error, uint seed = 0) {
-    return qHash(error.message(), seed);
-}
 
 #endif // ERROR_H
