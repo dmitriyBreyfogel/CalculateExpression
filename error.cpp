@@ -41,11 +41,11 @@ QString Error::message() const {
     case Type::divisionByZero:
         return "Деление на ноль невозможно, выражение: «" + expression + "»";
     case Type::noLeftOperand:
-        return "Отсутствует левый операнд у операции \"" + operation + "\" на позиции " + QString::number(indexSymbol);
+        return "Отсутствует левый операнд у операции «" + operation + "» на позиции " + QString::number(indexSymbol);
     case Type::noRightOperand:
-        return "Отсутствует правый операнд у операции \"" + operation + "\" на позиции " + QString::number(indexSymbol);
+        return "Отсутствует правый операнд у операции «" + operation + "» на позиции " + QString::number(indexSymbol);
     case Type::noBothOperands:
-        return "Отсутствуют операнды у операции \"" + operation + "\" на позиции " + QString::number(indexSymbol);
+        return "Отсутствуют операнды у операции «" + operation + "» на позиции " + QString::number(indexSymbol);
     case Type::noClosingParenthesis:
         return "Отсутствует закрывающая скобка к открывающей на позиции " + QString::number(indexSymbol);
     case Type::noOpeningParenthesis:
@@ -84,6 +84,6 @@ bool Error::operator==(const Error& other) const {
     case Type::countStrings:
     case Type::operandOutOfRange:
     default:
-        return true; // Для этих типов достаточно совпадения type
+        return true;
     }
 }
