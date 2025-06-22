@@ -119,19 +119,19 @@ ExpressionTree* ExpressionTree::build(const QList<Token>& tokens, QSet<Error>& e
         else if (token.value == ")") {  // Если токен - закрывающая скобка
             // Обрабатываем закрывающую скобку
             if (!handleCloseParenthesis(token, operators, nodes, positionsOpenParenthesis, errors)) // Если обработка не удалась
-                return nullptr; // Дерево не построено
+                throw errors; // Дерево не построено
         }
         // Обработка оператора
         else if (operatorsPrecedence.contains(token.value)) {   // Если токен - оператор
             // Обрабатываем оператор
             if (!handleOperator(token, operators, nodes, errors))   // Если обработка не удалась
-                return nullptr; // Дерево не построено
+                throw errors; // Дерево не построено
         }
         // Обработка операнда
         else if (determineNodeType(token.value) == NodeType::Operand) { // Если токен - операнд
             // Обрабатываем операнд
             if (!handleOperand(token, operators, nodes, errors))    // Если обработка не удалась
-                return nullptr; // Дерево не построено
+                throw errors; // Дерево не построено
         }
     }
 
@@ -143,18 +143,18 @@ ExpressionTree* ExpressionTree::build(const QList<Token>& tokens, QSet<Error>& e
             error.setType(Error::Type::noClosingParenthesis);   // Отсутствует закрывающая скобка
             error.setSymbolIndex(operators.top().start);
             errors.insert(error);
-            return nullptr; // Дерево не построено
+            throw errors; // Дерево не построено
         }
         if (!nodes.isEmpty() && nodes.top()->getEnd() < operators.top().start) {    // Если в стеке узлов остался узел, который до оператора
             // Обрабатываем ошибку
             addOperandsError(errors, Error::Type::noRightOperand, operators.top().value, operators.top().start);    // Отсутствует правый операнд
-            return nullptr; // Дерево не построено
+            throw errors; // Дерево не построено
         }
         else {  // Иначе
             // Обрабатываем оператор
             if (!processOperatorFromStack(operators, nodes, errors)) {  // Если обработка не удалась
                 // Если есть ошибки
-                if (!errors.isEmpty()) return nullptr;  // Дерево не построено
+                if (!errors.isEmpty()) throw errors;  // Дерево не построено
             }
         }
     }
@@ -181,10 +181,10 @@ ExpressionTree* ExpressionTree::build(const QList<Token>& tokens, QSet<Error>& e
         error.setRightOperand(rightOperand);
 
         errors.insert(error);
-        return nullptr; // Дерево не построено
+        throw errors; // Дерево не построено
     }
     else    // Иначе
-        return nullptr; // Дерево не построено
+        throw errors; // Дерево не построено
 }
 
 bool ExpressionTree::processOperatorFromStack(QStack<Token>& operators, QStack<ExpressionTree*>& nodes, QSet<Error>& errors) {
@@ -445,9 +445,12 @@ QString ExpressionTree::createSubexpressionString(const QList<Token>& tokens, co
     // Находим индексы крайних токенов в покрытии
     int firstTokenIndex, lastTokenIndex;
     findIndexesFirstAndLastTokensInRange(tokens, start, end, firstTokenIndex, lastTokenIndex);
+    qDebug() << "firstTokenIndex =" << firstTokenIndex << "lastTokenIndex =" << lastTokenIndex << "tokens size =" << tokens.size();
 
-    if (firstTokenIndex == -1 || lastTokenIndex == -1)  // Если токены не найдены
+    if (firstTokenIndex == -1 || lastTokenIndex == -1) { // Если токены не найдены
+        qDebug() << "Here 1";
         return "";  // Строки подвыражения нет
+    }
 
     QList<Token> subTokens = getTokensInRange(tokens, start, end);  // Собираем токены в диапазоне покрытия узла
 
@@ -465,8 +468,10 @@ QString ExpressionTree::createSubexpressionString(const QList<Token>& tokens, co
 
     if (!result.isEmpty())  // Если есть результат
         return result;  // Возвращаем его
-    else    // Иначе
+    else {   // Иначе
+        qDebug() << "Here 2";
         return "";  // Строки подвыражения нет
+    }
 }
 
 void ExpressionTree::findIndexesFirstAndLastTokensInRange(const QList<Token>& tokens, int start, int end, int& firstTokenIndex, int& lastTokenIndex) {
@@ -600,6 +605,7 @@ QString ExpressionTree::extendToOuterParentheses(const QList<Token>& tokens, int
 }
 
 double ExpressionTree::calculate(QSet<Error>& errors) const {
+    qDebug() << "Token count in calculate:" << expressionTokens.size();
     if (nodeType == NodeType::Operand)
         return value;
     else if (nodeType == NodeType::UnaryMinus) {
@@ -628,32 +634,33 @@ double ExpressionTree::calculate(QSet<Error>& errors) const {
             return leftOperand / rightOperand;
         }
         else if (nodeType == NodeType::Power) {
-            // Обработка отрицательного основания
+            qDebug() << "leftOperand =" << QString::number(leftOperand);
             if (leftOperand < 0) {
-                // Проверяем, является ли показатель дробью вида 1/n, где n — целое
+                // Проверяем, является ли показатель дробью 1/n, где n — целое
                 double inverse = 1.0 / rightOperand;
                 double intPart;
                 double fractPart = std::modf(inverse, &intPart);
-                if (std::abs(fractPart) < 1e-10) { // Если показатель — 1/n
+                if (std::abs(fractPart) < 1e-10) { // Показатель вида 1/n
                     int n = static_cast<int>(intPart);
-                    if (n % 2 == 0) { // Чётный корень (например, квадратный)
+                    if (n % 2 == 0) { // Чётный корень
                         Error error;
                         error.setType(Error::Type::incorrectRoot);
                         QString expression = createSubexpressionString(expressionTokens, this);
                         error.setExpression(expression);
                         errors.insert(error);
-                        return 0.0;
-                    } else { // Нечётный корень (например, кубический)
+                        throw errors;
+                    } else { // Нечётный корень
                         return -std::pow(-leftOperand, rightOperand);
                     }
-                } else {
-                    // Для других дробных показателей возвращаем ошибку
+                } else if (std::abs(rightOperand - std::round(rightOperand)) < 1e-10) { // Целый показатель
+                    return std::pow(leftOperand, rightOperand);
+                } else { // Дробный показатель, не 1/n
                     Error error;
                     error.setType(Error::Type::incorrectRoot);
                     QString expression = createSubexpressionString(expressionTokens, this);
                     error.setExpression(expression);
                     errors.insert(error);
-                    return 0.0;
+                    throw errors;
                 }
             }
             return std::pow(leftOperand, rightOperand);

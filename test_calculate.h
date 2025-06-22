@@ -15,6 +15,7 @@ private slots:
     void testCalculate_data();
 
 private:
+    static QList<Token> testTokens;
     QString compareErrors(const QSet<Error>& actual, const QSet<Error>& expected);
 };
 

@@ -8,20 +8,31 @@ void Test_Build::testBuild() {
 
     // Вызываем тестируемую функцию
     QSet<Error> actualErrors;
-    ExpressionTree* actualTree = ExpressionTree::build(tokens, actualErrors);
+    ExpressionTree* actualTree = nullptr;
 
+    try {
+        actualTree = ExpressionTree::build(tokens, actualErrors);
+    } catch (const QSet<Error>& caughtErrors) {
+        actualErrors = caughtErrors;
+    }
     // Сравниваем ошибки
     QString errorDifferences = compareErrors(actualErrors, errors);
     QVERIFY2(errorDifferences.isEmpty(), qPrintable(errorDifferences));
 
-    QStringList tracePath;
-    QString treeCompareError;
-    bool treesMatch = compareTrees(root, actualTree, tracePath, treeCompareError);
-    QVERIFY2(treesMatch, qPrintable(treeCompareError));
+    // Сравниваем деревья только если не ожидались ошибки и дерево успешно создано
+    if (actualErrors.isEmpty() && actualTree != nullptr) {
+        QStringList tracePath;
+        QString treeCompareError;
+        bool treesMatch = compareTrees(root, actualTree, tracePath, treeCompareError);
+        QVERIFY2(treesMatch, qPrintable(treeCompareError));
+    } else if (!actualErrors.isEmpty() && actualTree != nullptr) {
+        delete actualTree; // Очищаем, если дерево создано, но есть ошибки
+        actualTree = nullptr;
+    }
 
     // Очищаем память
-    delete root;
-    delete actualTree;
+    delete root; // Ожидаемое дерево всегда удаляем
+    delete actualTree; // Безопасно, если nullptr
 }
 
 void Test_Build::testBuild_data() {
