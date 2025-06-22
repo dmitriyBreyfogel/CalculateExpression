@@ -350,8 +350,8 @@ void Test_Build::testBuild_data() {
     ExpressionTree* node_22_1_1_2 = new ExpressionTree("5", nullptr, nullptr, 4, 4);
     ExpressionTree* node_22_1_1 = new ExpressionTree("+", node_22_1_1_1, node_22_1_1_2, 1, 5);
     ExpressionTree* node_22_1_2 = new ExpressionTree("2", nullptr, nullptr, 7, 7);
-    ExpressionTree* node_22_1 = new ExpressionTree("^", node_22_1_1, node_22_1_2, 1, 7);
-    ExpressionTree* node_22 = new ExpressionTree("-u", node_22_1, nullptr, 0, 7);
+    ExpressionTree* node_22_1 = new ExpressionTree("-u", node_22_1_1, nullptr, 0, 5);
+    ExpressionTree* node_22 = new ExpressionTree("^", node_22_1, node_22_1_2, 0, 7);
 
     QTest::newRow("22. Unary minus before parenthesized expression") << tokens_22 << node_22 << emptyErrors;
 
@@ -576,7 +576,7 @@ void Test_Build::testBuild_data() {
 
     Error error_34;
     error_34.setType(Error::Type::noClosingParenthesis);
-    error_34.setSymbolIndex(0);
+    error_34.setSymbolIndex(1);
 
     QSet<Error> errors_34 = { error_34 };
 
@@ -704,55 +704,50 @@ QString Test_Build::compareErrors(const QSet<Error>& actual, const QSet<Error>& 
     return result;
 }
 
-bool Test_Build::compareTrees(const ExpressionTree* expected, const ExpressionTree* actual, QStringList& tracePath, QString& error)
-{
-    // Проверка наличия узлов
+bool Test_Build::compareTrees(const ExpressionTree* expected, const ExpressionTree* actual, QStringList& tracePath, QString& error) {
+    if (!expected && !actual) {
+        return true;
+    }
     if (!expected || !actual) {
-        error = "Null node encountered";
+        error = "Null node encountered at path: " + tracePath.join("");
         return false;
     }
 
-    // Обновляем путь для отслеживания
     if (!tracePath.empty()) {
         tracePath += " -> ";
     }
-    tracePath << QString("Node(%1)").arg(expected->toString());
+    tracePath << QString("Node(%1)").arg(expected ? expected->toString() : "null");
 
-    // Сравниваем типы узлов и значения (если это операнд)
     if (expected->getNodeType() != actual->getNodeType()) {
         error = QString("Node type mismatch. Expected: %1, Found: %2. Path: %3")
-        .arg(expected->toString())
-            .arg(actual->toString())
+        .arg(expected ? expected->toString() : "null")
+            .arg(actual ? actual->toString() : "null")
             .arg(tracePath.join(""));
         return false;
     }
 
-    // Для операндов сравниваем значения
     if (expected->getNodeType() == ExpressionTree::Operand &&
-        expected->getValue() != actual->getValue()) {
-        error = QString("Value mismatch. Expected: %1, Found: %2. Path: %3")
-        .arg(expected->getValue())
-            .arg(actual->getValue())
+        (expected->getValue() != actual->getValue() ||
+         expected->getStart() != actual->getStart() ||
+         expected->getEnd() != actual->getEnd())) {
+        error = QString("Value or range mismatch. Expected: %1 (%2-%3), Found: %4 (%5-%6). Path: %7")
+        .arg(expected->getValue()).arg(expected->getStart()).arg(expected->getEnd())
+            .arg(actual->getValue()).arg(actual->getStart()).arg(actual->getEnd())
             .arg(tracePath.join(""));
         return false;
     }
 
-    // Проверяем левого потомка
-    if (!compareTrees(expected->getLeft(), actual->getLeft(), tracePath, error)) {
-        return false;
+    if (expected->getLeft() || actual->getLeft()) {
+        if (!compareTrees(expected->getLeft(), actual->getLeft(), tracePath, error)) {
+            return false;
+        }
     }
-
-    // Проверяем правого потомка
-    if (expected->getRight() && actual->getRight()) {
+    if (expected->getRight() || actual->getRight()) {
         if (!compareTrees(expected->getRight(), actual->getRight(), tracePath, error)) {
             return false;
         }
-    } else if (expected->getRight() || actual->getRight()) { // Один из них nullptr
-        error = QString("Right child missing at path: %1").arg(tracePath.join(""));
-        return false;
     }
 
-    // Откатываем изменения пути при успешной проверке
     if (!tracePath.isEmpty()) {
         tracePath.removeLast();
         if (!tracePath.isEmpty()) {

@@ -117,7 +117,6 @@ public:
         case Error::Type::countStrings:
         case Error::Type::operandOutOfRange:
         default:
-            // Для этих типов достаточно type
             break;
         }
         return hash;

@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QList>
 #include <QStack>
+#include <math.h>
 #include "error.h"
 
 struct Token;
@@ -104,6 +105,9 @@ public:
 private:
     friend class Test_ProcessOperatorFromStack; //!< Дружественный класс для тестирования функции processOperatorFromStack
     friend class Test_DetermineNodeType;        //!< Дружественный класс для тестирования функции determineNodeType
+    friend class Test_Calculate;
+
+    static QList<Token> expressionTokens;
 
     ExpressionTree* left;   //!< Левый ребёнок
     ExpressionTree* right;  //!< Правый ребёнок
@@ -126,7 +130,7 @@ private:
      * \param [in] number - число
      * \return true - число находится в необходимом диапазоне, false - не находится
      */
-    bool isValidNumber(double number) const;
+    static bool isValidNumber(double number);
 
     /*!
      * \brief Определяет тип узла по значению узла
@@ -134,6 +138,26 @@ private:
      * \return тип узла
      */
     static NodeType determineNodeType(const QString& token);
+
+    static void addOperandsError(QSet<Error>& errors, Error::Type type, const QString& operation, int symbolIndex);
+
+    static QString createSubexpressionString(const QList<Token>& tokens, const ExpressionTree* node);
+
+    static void findIndexesFirstAndLastTokensInRange(const QList<Token>& tokens, int start, int end, int& firstTokenIndex, int& lastTokenIndex);
+
+    static QList<Token> getTokensInRange(const QList<Token>& tokens, int start, int end);
+
+    static QString tokensToString(const QList<Token>& tokens);
+
+    static QString extendToOuterParentheses(const QList<Token>& tokens, int& start, int& end, QList<Token>& subTokens);
+
+    static void balanceParenthesesRange(const QList<Token>& tokens, int& start, int& end, QList<Token>& subTokens, QString& result);
+
+    static bool handleCloseParenthesis(const Token& token, QStack<Token>& operators, QStack<ExpressionTree*>& nodes, QStack<int>& positionsOpenParenthesis, QSet<Error>& errors);
+
+    static bool handleOperator(const Token& token, QStack<Token>& operators, QStack<ExpressionTree*>& nodes, QSet<Error>& errors);
+
+    static bool handleOperand(const Token& token, QStack<Token>& operators, QStack<ExpressionTree*>& nodes, QSet<Error>& errors);
 };
 
 #endif // EXPRESSIONTREE_H

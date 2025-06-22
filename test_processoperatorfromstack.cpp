@@ -258,7 +258,7 @@ void Test_ProcessOperatorFromStack::testProcessOperatorFromStack_data() {
     bool processed_12 = false;
 
     Error error_12;
-    error_12.setType(Error::Type::noRightOperand);
+    error_12.setType(Error::Type::noLeftOperand);
     error_12.setOperation("+");
     error_12.setSymbolIndex(3);
 
