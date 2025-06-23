@@ -1,3 +1,8 @@
+/*!
+ * \file
+ * \brief Заголовочный файл класса тестирования функции tokenize
+ */
+
 #ifndef TEST_TOKENIZE_H
 #define TEST_TOKENIZE_H
 

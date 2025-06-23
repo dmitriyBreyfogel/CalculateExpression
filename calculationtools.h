@@ -1,3 +1,8 @@
+/*!
+ * \file
+ * \brief Файл содержит заголовки функций и стркутуры, которые используются в ходе работы программы CalculateExpression
+ */
+
 #ifndef CALCULATIONTOOLS_H
 #define CALCULATIONTOOLS_H
 

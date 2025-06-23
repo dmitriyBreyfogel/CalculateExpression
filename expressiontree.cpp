@@ -1,3 +1,8 @@
+/*!
+* \file
+* \brief Реализация методов класса дерева выражения ExpressionTree
+*/
+
 #include "expressiontree.h"
 #include "calculationtools.h"
 
@@ -97,8 +102,19 @@ QString ExpressionTree::toString() const {
     return QString::number(value);
 }
 
+bool ExpressionTree::hasOperatorBetween(const QList<Token>& tokens, int endPos, int startPos) {
+    for (const Token& token : tokens) {
+        if (token.start > endPos && token.end < startPos) {
+            if (ExpressionTree::operatorsPrecedence.contains(token.value) && token.value != "(" && token.value != ")") {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 ExpressionTree* ExpressionTree::build(const QList<Token>& tokens, QSet<Error>& errors) {
-    expressionTokens = tokens;
+    expressionTokens = tokens;  // Запоминаем список токенов исходного выражения
 
     QStack<Token> operators;                // Стек операторов
     QStack<ExpressionTree*> nodes;          // Стек узлов
@@ -173,8 +189,8 @@ ExpressionTree* ExpressionTree::build(const QList<Token>& tokens, QSet<Error>& e
         ExpressionTree* secondNode = nodes[1];
 
         // Формируем строки подвыражений для первого и второго узлов
-        QString leftOperand = createSubexpressionString(tokens, firstNode);
-        QString rightOperand = createSubexpressionString(tokens, secondNode);
+        QString leftOperand = createSubexpressionString(firstNode);
+        QString rightOperand = createSubexpressionString(secondNode);
 
         // Устанавливаем строки операндов в ошибки
         error.setLeftOperand(leftOperand);
@@ -431,47 +447,42 @@ bool ExpressionTree::handleOperand(const Token& token, QStack<Token>& operators,
     return true;    // Обработка операнда удалась
 }
 
-QString ExpressionTree::createSubexpressionString(const QList<Token>& tokens, const ExpressionTree* node) {
+QString ExpressionTree::createSubexpressionString(const ExpressionTree* node) {
+    // Проверяем наличие узла
     if (!node)  // Если узла нет
-        return "";  // Строки подвыражения нет
+        return ""; // Возвращаем пустую строку
 
-    if (node->nodeType == NodeType::Operand)    // Если узел — операнд
-        return QString::number(node->value);    // Возвращаем его значение
+    // Обрабатываем операнд
+    if (node->nodeType == NodeType::Operand)    // Если это операнд
+        return QString::number(node->value); // Возвращаем строковое представление значения операнда
 
-    // Получаем покрытие узла
+    // Получаем границы покрытия узла
     int start = node->getStart();
     int end = node->getEnd();
 
-    // Находим индексы крайних токенов в покрытии
+    // Находим индексы первого и последнего токенов в диапазоне
     int firstTokenIndex, lastTokenIndex;
-    findIndexesFirstAndLastTokensInRange(tokens, start, end, firstTokenIndex, lastTokenIndex);
-    qDebug() << "firstTokenIndex =" << firstTokenIndex << "lastTokenIndex =" << lastTokenIndex << "tokens size =" << tokens.size();
+    findIndexesFirstAndLastTokensInRange(expressionTokens, start, end, firstTokenIndex, lastTokenIndex);
 
-    if (firstTokenIndex == -1 || lastTokenIndex == -1) { // Если токены не найдены
-        qDebug() << "Here 1";
-        return "";  // Строки подвыражения нет
+    // Проверяем нашлись ли индексы токенов
+    if (firstTokenIndex == -1 || lastTokenIndex == -1) {    // Если хотя бы один токен не найден
+        return ""; // Возвращаем пустую строку
     }
 
-    QList<Token> subTokens = getTokensInRange(tokens, start, end);  // Собираем токены в диапазоне покрытия узла
+    QList<Token> subTokens = getTokensInRange(expressionTokens, start, end);    // Собираем токены в диапазоне покрытия узла
+    QString result = tokensToString(subTokens); // Формируем строку из токенов покрытия
 
-    QString result = tokensToString(subTokens); // Формируем строку из токенов покрытия узла
+    // Считаем количество открывающих и закрывающих скобок
+    int countOpenParenthesis = result.count('(');
+    int countClosingParenthesis = result.count(')');
 
-    int countOpenParenthesis = result.count('(');   // Считаем открывающие скобки
-    int countClosingParenthesis = result.count(')');    // Считаем закрывающие скобки
-
-
-    if (countOpenParenthesis != countClosingParenthesis) {  // Если скобки некорректны
-        balanceParenthesesRange(tokens, start, end, subTokens, result); // Расширяем диапазон до валидных блоков скобок
+    // Проверяем баланс скобок
+    if (countOpenParenthesis != countClosingParenthesis) {  // Если скобки не сбалансированы
+        balanceParenthesesRange(expressionTokens, start, end, subTokens, result);   // Балансируем скобки в диапазоне
     }
 
-    result = extendToOuterParentheses(tokens, start, end, subTokens);    // Получаем строку с обрамляющими текущий диапазон скобками
-
-    if (!result.isEmpty())  // Если есть результат
-        return result;  // Возвращаем его
-    else {   // Иначе
-        qDebug() << "Here 2";
-        return "";  // Строки подвыражения нет
-    }
+    result = extendToOuterParentheses(expressionTokens, start, end, subTokens); // Расширяем диапазон до внешних парных скобок
+    return result.trimmed();    // Возвращаем строку подвыражения без лишних пробелов
 }
 
 void ExpressionTree::findIndexesFirstAndLastTokensInRange(const QList<Token>& tokens, int start, int end, int& firstTokenIndex, int& lastTokenIndex) {
@@ -512,158 +523,166 @@ QString ExpressionTree::tokensToString(const QList<Token>& tokens) {
 }
 
 void ExpressionTree::balanceParenthesesRange(const QList<Token>& tokens, int& start, int& end, QList<Token>& subTokens, QString& result) {
-    // Находим индексы первого и последнего токенов в текущем диапазоне
+    // Находим индексы первого и последнего токенов в диапазоне
     int firstTokenIndex, lastTokenIndex;
     findIndexesFirstAndLastTokensInRange(tokens, start, end, firstTokenIndex, lastTokenIndex);
 
-    // Инициализируем индексы для проверки соседних токенов слева и справа
+    // Устанавливаем начальные индексы для поиска скобок
     int leftIndex = firstTokenIndex - 1;
     int rightIndex = lastTokenIndex + 1;
-    bool expanded = true;
 
-    // Продолжаем расширять диапазон, пока есть соседние скобки и доступные токены
-    while (expanded && (leftIndex >= 0 || rightIndex < tokens.size())) {
-        expanded = false; // Сбрасываем флаг расширения
+    // Считаем количество открывающих и закрывающих скобок
+    int openParCount = result.count('(');
+    int closeParCount = result.count(')');
 
-        // Проверяем наличие открывающей скобки слева от диапазона
-        if (leftIndex >= 0 && tokens[leftIndex].value == "(") { // Если слева от диапазона покрытия узла - открывающая скобка
-            start = tokens[leftIndex].start; // Обновляем начальную позицию
-            expanded = true; // Устанавливаем флаг расширения
-            leftIndex--; // Переходим к следующему токену слева
+    // Расширяем диапазон, пока скобки не сбалансированы
+    while (openParCount != closeParCount && (leftIndex >= 0 || rightIndex < tokens.size())) { // Пока скобки не сбалансированы и есть токены для проверки
+        bool expanded = false;  // Инициализируем флаг расширения диапазона
+
+        // Добавляем открывающую скобку слева, если нужно
+        if (openParCount < closeParCount && leftIndex >= 0 && tokens[leftIndex].value == "(") { // Если не хватает открывающих скобок
+            start = tokens[leftIndex].start;    // Обновляем начальную позицию диапазона
+            expanded = true;    // Указываем, что диапазон расширен
+            leftIndex--;    // Сдвигаем индекс влево
+            openParCount++; // Увеличиваем счётчик открывающих скобок
+        }
+        // Добавляем закрывающую скобку справа, если нужно
+        else if (openParCount > closeParCount && rightIndex < tokens.size() && tokens[rightIndex].value == ")") { // Если не хватает закрывающих скобок
+            end = tokens[rightIndex].end;   // Обновляем конечную позицию диапазона
+            expanded = true;    // Указываем, что диапазон расширен
+            rightIndex++;   // Сдвигаем индекс вправо
+            closeParCount++;    // Увеличиваем счётчик закрывающих скобок
         }
 
-        // Проверяем наличие закрывающей скобки справа от диапазона
-        if (rightIndex < tokens.size() && tokens[rightIndex].value == ")") {    // Если справа от диапазона покрытия узла - закрывающая скобка
-            end = tokens[rightIndex].end; // Обновляем конечную позицию
-            expanded = true; // Устанавливаем флаг расширения
-            rightIndex++; // Переходим к следующему токену справа
+        // Обновляем токены и строку, если диапазон расширен
+        if (expanded) { // Если добавлены скобки
+            subTokens.clear();  // Очищаем текущий список токенов
+            result.clear(); // Очищаем текущую строку
+            subTokens = getTokensInRange(tokens, start, end);   // Собираем токены в новом диапазоне
+            result = tokensToString(subTokens); // Формируем строку из новых токенов
         }
-
-        // Если диапазон расширен, обновляем токены и строку результата
-        if (expanded) {
-            subTokens.clear(); // Очищаем текущий список токенов
-            result.clear(); // Очищаем текущую строку результата
-            subTokens = getTokensInRange(tokens, start, end); // Собираем токены в новом диапазоне
-            result += tokensToString(subTokens); // Формируем новую строку из токенов
+        else {  // Иначе
+            break; // Завершаем цикл, если скобки не добавлены
         }
     }
 }
 
 QString ExpressionTree::extendToOuterParentheses(const QList<Token>& tokens, int& start, int& end, QList<Token>& subTokens) {
-    // Формируем валидные блоки скобок текущего покрытия узла, включая соседние пробелы
-    while (true) {  // Пока есть парные скобки
-        int newLeftIndex = -1;
-        int newRightIndex = tokens.size();
-        int newStart = start; // Новая начальная позиция, учитывающая пробелы
-        int newEnd = end;     // Новая конечная позиция, учитывающая пробелы
+    // Устанавливаем начальные границы диапазона
+    int newStart = start;
+    int newEnd = end;
 
-        // Ищем ближайшие скобки, учитывая пробелы перед ними
-        for (int i = 0; i < tokens.size(); ++i) {   // Для каждого токена
-            // Проверяем слева от текущего диапазона
-            if (tokens[i].end == start - 1) { // Токен прилегает к началу диапазона
-                if (tokens[i].value.trimmed().isEmpty()) { // Если токен — пробел
-                    newStart = tokens[i].start; // Включаем пробел в диапазон
-                    // Проверяем следующий токен слева на открывающую скобку
-                    if (i > 0 && tokens[i - 1].end == tokens[i].start - 1 && tokens[i - 1].value == "(") {
-                        newLeftIndex = i - 1; // Запоминаем индекс скобки
-                        newStart = tokens[i - 1].start; // Обновляем начальную позицию
-                    }
-                } else if (tokens[i].value == "(") { // Если токен — открывающая скобка
-                    newLeftIndex = i; // Запоминаем индекс
-                    newStart = tokens[i].start; // Обновляем начальную позицию
-                }
-            }
-            // Проверяем справа от текущего диапазона
-            if (tokens[i].start == end + 1) { // Токен прилегает к концу диапазона
-                if (tokens[i].value.trimmed().isEmpty()) { // Если токен — пробел
-                    newEnd = tokens[i].end; // Включаем пробел в диапазон
-                    // Проверяем следующий токен справа на закрывающую скобку
-                    if (i < tokens.size() - 1 && tokens[i + 1].start == tokens[i].end + 1 && tokens[i + 1].value == ")") {
-                        newRightIndex = i + 1; // Запоминаем индекс скобки
-                        newEnd = tokens[i + 1].end; // Обновляем конечную позицию
-                    }
-                } else if (tokens[i].value == ")") { // Если токен — закрывающая скобка
-                    newRightIndex = i; // Запоминаем индекс
-                    newEnd = tokens[i].end; // Обновляем конечную позицию
-                }
+    // Расширяем диапазон, пока есть парные скобки
+    while (true) { // Пока можно добавить парные скобки
+        // Инициализируем флаги наличия скобок
+        bool hasLeftParen = false;
+        bool hasRightParen = false;
+
+        // Проверяем токен слева от newStart
+        for (int i = 0; i < tokens.size(); ++i) { // Для каждого токена
+            if (tokens[i].end == newStart - 1 && tokens[i].value == "(") { // Если найден токен '(' слева
+                hasLeftParen = true;    // Указываем наличие открывающей скобки
+                newStart = tokens[i].start; // Обновляем начальную позицию
+                break;  // Прерываем поиск
             }
         }
 
-        if (newLeftIndex >= 0 && newRightIndex < tokens.size()) {  // Если нашли обе парные скобки
-            // Обновляем границы покрытия, включая пробелы
-            start = newStart;
-            end = newEnd;
-            subTokens.clear();
-            subTokens = getTokensInRange(tokens, start, end);   // Собираем токены по заданному диапазону
+        // Проверяем токен справа от newEnd
+        for (int i = 0; i < tokens.size(); ++i) { // Для каждого токена
+            if (tokens[i].start == newEnd + 1 && tokens[i].value == ")") { // Если найден токен ')' справа
+                hasRightParen = true;   // Указываем наличие закрывающей скобки
+                newEnd = tokens[i].end; // Обновляем конечную позицию
+                break;  // Прерываем поиск
+            }
+        }
+
+        // Обновляем диапазон, если найдены обе скобки
+        if (hasLeftParen && hasRightParen) { // Если есть пара скобок
+            start = newStart;   // Устанавливаем новую начальную позицию
+            end = newEnd;   // Устанавливаем новую конечную позицию
+            subTokens = getTokensInRange(tokens, start, end);   // Собираем токены в новом диапазоне
         }
         else {    // Иначе
-            break; // Прекращаем поиск скобок
+            break; // Завершаем цикл, если хотя бы одной скобки нет
         }
     }
 
-    return tokensToString(subTokens);   // Возвращаем строку из имеющихся токенов
+    // Формируем строку из токенов
+    return tokensToString(subTokens); // Возвращаем строку подвыражения
 }
 
 double ExpressionTree::calculate(QSet<Error>& errors) const {
-    qDebug() << "Token count in calculate:" << expressionTokens.size();
-    if (nodeType == NodeType::Operand)
-        return value;
-    else if (nodeType == NodeType::UnaryMinus) {
-        double leftOperand = left->calculate(errors);
-        return leftOperand * (-1);
+    // Обрабатываем операнд
+    if (nodeType == NodeType::Operand)  // Если текущий узел - операнд
+        return value;   // Возвращаем его значение
+    // Обрабатываем унарный минус
+    else if (nodeType == NodeType::UnaryMinus) {    // Если текущий узел - унарный минус
+        double leftOperand = left->calculate(errors);   // Получаем значение операнда
+        return leftOperand * (-1);  // Возвращаем значение операнда умноженное на (-1)
     }
-    else {
-        double leftOperand = left->calculate(errors);
-        double rightOperand = right->calculate(errors);
+    // Обрабатываем бинарные операторы
+    else {  // Иначе
+        double leftOperand = left->calculate(errors);   // Получаем значение левого операнда
+        double rightOperand = right->calculate(errors); // Получаем значение правого операнда
 
-        if (nodeType == NodeType::Plus)
-            return leftOperand + rightOperand;
-        else if (nodeType == NodeType::BinaryMinus)
-            return leftOperand - rightOperand;
-        else if (nodeType == NodeType::Multiplication)
-            return leftOperand * rightOperand;
-        else if (nodeType == NodeType::Division) {
-            if (rightOperand == 0) {
+        // Обрабатываем сумму
+        if (nodeType == NodeType::Plus) // Если текущий узел - плюс
+            return leftOperand + rightOperand;  // Возвращаем сумму операндов
+        // Обрабатываем бинарный минус
+        else if (nodeType == NodeType::BinaryMinus) // Если текущий узел - бинарный минус
+            return leftOperand - rightOperand;  // Возвращаем разность левого и правого операндов
+        // Обрабатываем произведение
+        else if (nodeType == NodeType::Multiplication)  // Если текущий узел - произведение
+            return leftOperand * rightOperand;  // Возвращаем произведение левого и правого операндов
+        // Обрабатываем частное
+        else if (nodeType == NodeType::Division) {  // Если текущий узел - частное
+            // Обрабатываем деление на ноль
+            if (rightOperand == 0) {    // Если значение правого операнда равно нулю
+                // Обрабатываем ошибку
                 Error error;
                 error.setType(Error::Type::divisionByZero);
-                QString expression = createSubexpressionString(expressionTokens, this);
+                QString expression = createSubexpressionString(this);
                 error.setExpression(expression);
                 errors.insert(error);
-                throw errors;
+                throw errors;   // Расчёт окончен с ошибкой
             }
-            return leftOperand / rightOperand;
+            return leftOperand / rightOperand;  // Возвращаем частное левого и правого операндов
         }
-        else if (nodeType == NodeType::Power) {
-            qDebug() << "leftOperand =" << QString::number(leftOperand);
-            if (leftOperand < 0) {
+        // Обрабатываем возведение в степень
+        else if (nodeType == NodeType::Power) { // Если текущий узел - возведение в степень
+            // Обрабатываем возведение в степень отрицательного числа
+            if (leftOperand < 0) {  // Если левый операнд - отрицательный
                 // Проверяем, является ли показатель дробью 1/n, где n — целое
-                double inverse = 1.0 / rightOperand;
+                double inverse = 1.0 / rightOperand;    // Получаем n
                 double intPart;
                 double fractPart = std::modf(inverse, &intPart);
-                if (std::abs(fractPart) < 1e-10) { // Показатель вида 1/n
+                if (std::abs(fractPart) < 1e-10) { // Если это показатель вида 1/n
                     int n = static_cast<int>(intPart);
-                    if (n % 2 == 0) { // Чётный корень
+                    // Проверяем чётность корня
+                    if (n % 2 == 0) {  // Если корень чётный
+                        // Обрабатываем ошибку
                         Error error;
-                        error.setType(Error::Type::incorrectRoot);
-                        QString expression = createSubexpressionString(expressionTokens, this);
+                        error.setType(Error::Type::incorrectRoot);  // Некорректное извлечение корня
+                        QString expression = createSubexpressionString(this);
                         error.setExpression(expression);
                         errors.insert(error);
-                        throw errors;
-                    } else { // Нечётный корень
-                        return -std::pow(-leftOperand, rightOperand);
+                        throw errors;   // Расчёт окончен с ошибкой
+                    } else { // Иначе
+                        return -std::pow(-leftOperand, rightOperand);   // Возвращаем отрицательное значение извлечённого корня
                     }
-                } else if (std::abs(rightOperand - std::round(rightOperand)) < 1e-10) { // Целый показатель
-                    return std::pow(leftOperand, rightOperand);
-                } else { // Дробный показатель, не 1/n
+                } else if (std::abs(rightOperand - std::round(rightOperand)) < 1e-10) { // Если это целый показатель
+                    return std::pow(leftOperand, rightOperand); // Возвращаем значение возведения в степень
+                } else { // Если это дробный показатель, не 1/n
+                    // Обрабатываем ошибку
                     Error error;
-                    error.setType(Error::Type::incorrectRoot);
-                    QString expression = createSubexpressionString(expressionTokens, this);
+                    error.setType(Error::Type::incorrectRoot);  // Некорректное извлечение корня
+                    QString expression = createSubexpressionString(this);
                     error.setExpression(expression);
                     errors.insert(error);
-                    throw errors;
+                    throw errors;   // Расчёт окончен с ошибкой
                 }
             }
-            return std::pow(leftOperand, rightOperand);
+            return std::pow(leftOperand, rightOperand); // Возвращаем значение возведения в степень
         }
     }
     return 0;

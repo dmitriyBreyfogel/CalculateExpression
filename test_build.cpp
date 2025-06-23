@@ -1,12 +1,15 @@
+/*!
+* \file
+* \brief Реализация методов класса тестирования функции ExpressionTree::build
+*/
+
 #include "test_build.h"
 
 void Test_Build::testBuild() {
-    // Получаем данные из тестовой строки
     QFETCH(QList<Token>, tokens);
     QFETCH(ExpressionTree*, root);
     QFETCH(QSet<Error>, errors);
 
-    // Вызываем тестируемую функцию
     QSet<Error> actualErrors;
     ExpressionTree* actualTree = nullptr;
 
@@ -15,24 +18,22 @@ void Test_Build::testBuild() {
     } catch (const QSet<Error>& caughtErrors) {
         actualErrors = caughtErrors;
     }
-    // Сравниваем ошибки
+
     QString errorDifferences = compareErrors(actualErrors, errors);
     QVERIFY2(errorDifferences.isEmpty(), qPrintable(errorDifferences));
 
-    // Сравниваем деревья только если не ожидались ошибки и дерево успешно создано
     if (actualErrors.isEmpty() && actualTree != nullptr) {
         QStringList tracePath;
         QString treeCompareError;
         bool treesMatch = compareTrees(root, actualTree, tracePath, treeCompareError);
         QVERIFY2(treesMatch, qPrintable(treeCompareError));
     } else if (!actualErrors.isEmpty() && actualTree != nullptr) {
-        delete actualTree; // Очищаем, если дерево создано, но есть ошибки
+        delete actualTree;
         actualTree = nullptr;
     }
 
-    // Очищаем память
-    delete root; // Ожидаемое дерево всегда удаляем
-    delete actualTree; // Безопасно, если nullptr
+    delete root;
+    delete actualTree;
 }
 
 void Test_Build::testBuild_data() {

@@ -1,3 +1,8 @@
+/*!
+ * \file
+ * \brief Заголовочный файл класса тестирования функции ExpressionTree::processOperatorFromStack
+ */
+
 #ifndef TEST_PROCESSOPERATORFROMSTACK_H
 #define TEST_PROCESSOPERATORFROMSTACK_H
 

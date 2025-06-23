@@ -1,3 +1,8 @@
+/*!
+* \file
+* \brief Реализация методов класса ошибок Error
+*/
+
 #include "error.h"
 
 void Error::setType(Type type) {

@@ -1,9 +1,13 @@
+/*!
+* \file
+* \brief Реализация методов класса тестирования функции ExpressionTree::calculate
+*/
+
 #include "test_calculate.h"
 
 QList<Token> Test_Calculate::testTokens;
 
 void Test_Calculate::testCalculate() {
-    // Получаем тестовые данные
     QFETCH(ExpressionTree*, root);
     QFETCH(double, result);
     QFETCH(QSet<Error>, errors);
@@ -11,12 +15,7 @@ void Test_Calculate::testCalculate() {
 
 
     ExpressionTree::expressionTokens = tokens;
-    qDebug() << "Tokens synced in testCalculate:" << tokens.size();
 
-    qDebug() << ExpressionTree::tokensToString(tokens);
-
-
-    // Вычисляем результат
     QSet<Error> actualErrors;
     double actualResult = 0.0;
     try {
@@ -25,13 +24,11 @@ void Test_Calculate::testCalculate() {
         actualErrors = thrownErrors;
     }
 
-    // Сравниваем ошибки
     QString errorComparison = compareErrors(actualErrors, errors);
     QVERIFY2(errorComparison.isEmpty(), qPrintable(errorComparison));
 
-    // Сравниваем результаты (только если нет ошибок)
     if (errors.isEmpty()) {
-        const double epsilon = 1e-8; // Точность для сравнения вещественных чисел
+        const double epsilon = 1e-8;
         bool resultMatch = qAbs(actualResult - result) < epsilon;
 
         QVERIFY2(resultMatch, qPrintable(
@@ -41,7 +38,6 @@ void Test_Calculate::testCalculate() {
                                   ));
     }
 
-    // Очищаем память
     delete root;
 }
 

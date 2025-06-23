@@ -1,3 +1,8 @@
+/*!
+* \file
+* \brief Реализация методов класса тестирования функции ExpressionTree::determineNodeType
+*/
+
 #include "test_determinenodetype.h"
 
 void Test_DetermineNodeType::testDetermineNodeType() {

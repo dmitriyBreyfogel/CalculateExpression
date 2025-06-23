@@ -1,3 +1,8 @@
+/*!
+ * \file
+ * \brief Заголовочный файл класса тестирования функции ExpressionTree::build
+ */
+
 #ifndef TEST_BUILD_H
 #define TEST_BUILD_H
 

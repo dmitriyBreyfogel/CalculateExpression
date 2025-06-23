@@ -1,3 +1,8 @@
+/*!
+* \file
+* \brief Реализация функций, использующихся в ходе работы программы CalculateExpression.
+*/
+
 #include "calculationtools.h"
 #include "expressiontree.h"
 

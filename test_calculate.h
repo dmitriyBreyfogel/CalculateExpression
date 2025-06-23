@@ -1,3 +1,8 @@
+/*!
+ * \file
+ * \brief Заголовочный файл класса тестирования функции ExpressionTree::calculate
+ */
+
 #ifndef TEST_CALCULATE_H
 #define TEST_CALCULATE_H
 

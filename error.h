@@ -1,3 +1,8 @@
+/*!
+ * \file
+ * \brief Заголовочный файл класса ошибок Error
+ */
+
 #ifndef ERROR_H
 #define ERROR_H
 

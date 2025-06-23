@@ -1,3 +1,8 @@
+/*!
+* \file
+* \brief Реализация методов класса тестирования функции tokenize
+*/
+
 #include "test_tokenize.h"
 
 void Test_Tokenize::testTokenize() {

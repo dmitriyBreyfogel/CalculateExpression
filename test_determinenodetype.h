@@ -1,3 +1,8 @@
+/*!
+ * \file
+ * \brief Заголовочный файл класса тестирования функции ExpressionTree::determineNodeType
+ */
+
 #ifndef TEST_DETERMINENODETYPE_H
 #define TEST_DETERMINENODETYPE_H
 

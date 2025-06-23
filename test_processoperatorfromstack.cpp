@@ -1,3 +1,8 @@
+/*!
+* \file
+* \brief Реализация методов класса тестирования функции ExpressionTree::processOperatorFromStack
+*/
+
 #include "test_processoperatorfromstack.h"
 
 void Test_ProcessOperatorFromStack::testProcessOperatorFromStack()
