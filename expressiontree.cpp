@@ -288,7 +288,7 @@ bool ExpressionTree::handleCloseParenthesis(const Token& token, QStack<Token>& o
                 }
                 else {  // Иначе
                     // Обрабатываем ошибку отсутствия правого операнда
-                    addOperandsError(errors, Error::Type::noRightOperand, operators.top().value, operators.top().start);
+                    addOperandsError(errors, Error::Type::noRightOperand, "-", operators.top().start);
                     return false; // Дерево не построено
                 }
             }
@@ -355,10 +355,17 @@ bool ExpressionTree::handleCloseParenthesis(const Token& token, QStack<Token>& o
                 hasValidRightOperand = rightOperand->getStart() > positionsOpenParenthesis.top() &&
                                        rightOperand->getStart() > operators.top().end;
 
+                leftOperand = nodes.top();
+
+                hasValidLeftOperand = leftOperand->getStart() > positionsOpenParenthesis.top() &&
+                                       leftOperand->getEnd() < operators.top().start;
+
                 // Обрабатываем ошибку
                 Error error;
                 if (hasValidRightOperand)   // Если правый операнд является валидным
                     addOperandsError(errors, Error::Type::noLeftOperand, operators.top().value, operators.top().start); // Отсутствует левый операнд
+                else if (hasValidLeftOperand)
+                    addOperandsError(errors, Error::Type::noRightOperand, operators.top().value, operators.top().start);
                 else    // Иначе
                     addOperandsError(errors, Error::Type::noBothOperands, operators.top().value, operators.top().start);    // Отсутствуют оба операнда
                 return false;   // Обработка закрывающей скобки не удалась
