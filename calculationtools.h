@@ -123,6 +123,11 @@ namespace TokenizerUtils {
 bool readInputFile(const QString& filePath, QString& expression, QSet<Error>& errors);
 
 /*!
+ * \brief Запускает тестирование основных функций
+ */
+void runTests();
+
+/*!
  * \brief Разбивает строку математического выражения на валидные токены
  * \param [in] expression - строка математического выражения
  * \param [in, out] errors - список ошибок

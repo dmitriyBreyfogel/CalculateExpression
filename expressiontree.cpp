@@ -102,17 +102,6 @@ QString ExpressionTree::toString() const {
     return QString::number(value);
 }
 
-bool ExpressionTree::hasOperatorBetween(const QList<Token>& tokens, int endPos, int startPos) {
-    for (const Token& token : tokens) {
-        if (token.start > endPos && token.end < startPos) {
-            if (ExpressionTree::operatorsPrecedence.contains(token.value) && token.value != "(" && token.value != ")") {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 ExpressionTree* ExpressionTree::build(const QList<Token>& tokens, QSet<Error>& errors) {
     expressionTokens = tokens;  // Запоминаем список токенов исходного выражения
 

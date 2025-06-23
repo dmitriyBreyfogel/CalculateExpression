@@ -15,7 +15,8 @@ SOURCES += \
         test_calculate.cpp \
         test_determinenodetype.cpp \
         test_processoperatorfromstack.cpp \
-        test_tokenize.cpp
+        test_tokenize.cpp \
+        testrunner.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -30,4 +31,5 @@ HEADERS += \
     test_calculate.h \
     test_determinenodetype.h \
     test_processoperatorfromstack.h \
-    test_tokenize.h
+    test_tokenize.h \
+    testrunner.h

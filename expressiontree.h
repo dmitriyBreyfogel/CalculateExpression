@@ -237,8 +237,6 @@ private:
      * \param [in] symbolIndex - индекс символа в выражении
      */
     static void addOperandsError(QSet<Error>& errors, Error::Type type, const QString& operation, int symbolIndex);
-
-    static bool hasOperatorBetween(const QList<Token>& tokens, int endPos, int startPos);
 };
 
 #endif // EXPRESSIONTREE_H
